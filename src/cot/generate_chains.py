@@ -172,6 +172,8 @@ def main():
     parser.add_argument("--output_dir", type=str, default="results/phase2")
     parser.add_argument("--dry_run", action="store_true")
     parser.add_argument("--max_new_tokens", type=int, default=300)
+    parser.add_argument("--mode", type=str, default="base", choices=["base", "unlearned"],
+                        help="Run base or unlearned model (separate invocations to avoid Windows segfault)")
     args = parser.parse_args()
 
     print("=" * 60)
@@ -195,70 +197,48 @@ def main():
     )
     print(f"Built {len(boundary_prompts)} boundary + {len(control_prompts)} control prompts")
 
-    # --- Generate with BASE model ---
-    print(f"\nLoading BASE model: {args.model_name}")
-    model, tokenizer = load_model(args.model_name)
-    print_vram()
-
-    print("\n--- BASE MODEL: Boundary chains ---")
-    base_boundary = run_generation(model, tokenizer, boundary_prompts, "Base/Boundary")
-    print("--- BASE MODEL: Control chains ---")
-    base_control = run_generation(model, tokenizer, control_prompts, "Base/Control")
-
-    # Free base model
-    del model
-    torch.cuda.empty_cache()
-
-    # --- Generate with UNLEARNED model ---
+    # --- Load model based on mode ---
     adapter = args.adapter_path or "models/checkpoints/ga"
-    if os.path.exists(adapter):
+    if args.mode == "unlearned":
+        if not os.path.exists(adapter):
+            print(f"ERROR: No adapter at {adapter}. Run gradient_ascent.py first.")
+            return
         print(f"\nLoading UNLEARNED model with adapter: {adapter}")
         model, tokenizer = load_model(args.model_name, adapter)
-        print_vram()
-
-        # Need fresh copies of prompts for unlearned model
-        boundary_prompts_ul, control_prompts_ul = build_cot_prompts(
-            forget_ds, retain_ds, args.n_boundary, args.n_control
-        )
-
-        print("\n--- UNLEARNED MODEL: Boundary chains ---")
-        ul_boundary = run_generation(model, tokenizer, boundary_prompts_ul, "Unlearned/Boundary")
-        print("--- UNLEARNED MODEL: Control chains ---")
-        ul_control = run_generation(model, tokenizer, control_prompts_ul, "Unlearned/Control")
-
-        del model
-        torch.cuda.empty_cache()
     else:
-        print(f"\n[WARN] No adapter found at {adapter} — skipping unlearned model generation")
-        print("Run gradient_ascent.py first, then re-run this script.")
-        ul_boundary, ul_control = [], []
+        print(f"\nLoading BASE model: {args.model_name}")
+        model, tokenizer = load_model(args.model_name)
+    print_vram()
+
+    print(f"\n--- {args.mode.upper()} MODEL: Boundary chains ---")
+    boundary_results = run_generation(model, tokenizer, boundary_prompts, f"{args.mode}/Boundary")
+    print(f"--- {args.mode.upper()} MODEL: Control chains ---")
+    control_results = run_generation(model, tokenizer, control_prompts, f"{args.mode}/Control")
 
     # --- Save results ---
     os.makedirs(args.output_dir, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output = {
         "model": args.model_name,
-        "adapter": adapter if os.path.exists(adapter) else None,
-        "n_boundary": len(base_boundary),
-        "n_control": len(base_control),
+        "mode": args.mode,
+        "adapter": adapter if args.mode == "unlearned" else None,
+        "n_boundary": len(boundary_results),
+        "n_control": len(control_results),
         "timestamp": timestamp,
         "dry_run": args.dry_run,
-        "base_boundary": base_boundary,
-        "base_control": base_control,
-        "unlearned_boundary": ul_boundary,
-        "unlearned_control": ul_control,
+        f"{args.mode}_boundary": boundary_results,
+        f"{args.mode}_control": control_results,
     }
-    out_path = os.path.join(args.output_dir, f"cot_chains_{timestamp}.json")
+    out_path = os.path.join(args.output_dir, f"cot_chains_{args.mode}_{timestamp}.json")
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2, ensure_ascii=False)
     print(f"\nResults saved to {out_path}")
 
     # Quick summary
-    if ul_boundary:
-        avg_base_steps = sum(r["n_steps_generated"] for r in base_boundary) / max(len(base_boundary), 1)
-        avg_ul_steps = sum(r["n_steps_generated"] for r in ul_boundary) / max(len(ul_boundary), 1)
-        print(f"\nBase model avg steps (boundary): {avg_base_steps:.1f}")
-        print(f"Unlearned model avg steps (boundary): {avg_ul_steps:.1f}")
+    avg_b_steps = sum(r["n_steps_generated"] for r in boundary_results) / max(len(boundary_results), 1)
+    avg_c_steps = sum(r["n_steps_generated"] for r in control_results) / max(len(control_results), 1)
+    print(f"\n{args.mode} model avg steps — boundary: {avg_b_steps:.1f}, control: {avg_c_steps:.1f}")
+    print(f"Run with --mode {'unlearned' if args.mode == 'base' else 'base'} to get comparison.")
 
 
 if __name__ == "__main__":
