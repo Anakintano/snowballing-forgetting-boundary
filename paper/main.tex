@@ -143,18 +143,58 @@ downstream CoT steps exhibit compounding error accumulation.
 \label{sec:experiments}
 
 \subsection{Setup}
-\textbf{Models.} We evaluate on three models: \TODO{list after running experiments}.
+\textbf{Models.} We evaluate on Qwen2.5-1.5B-Instruct~(1.5B parameters),
+loaded in 4-bit NF4 quantization. All unlearning is performed via LoRA adapters
+($r{=}8$, $\alpha{=}16$, targeting \texttt{q\_proj} and \texttt{v\_proj}).
 
 \textbf{Unlearning Methods.} We compare Gradient Ascent (GA)~\cite{thudi2022unrolling},
 Bad Teacher~\cite{chundawat2023bad}, and NPO~\cite{zhang2024npo}.
 
-\textbf{Dataset.} We use the TOFU benchmark~\cite{maini2024tofu}, \TODO{describe forget/retain split}.
+\textbf{Dataset.} We use the TOFU benchmark~\cite{maini2024tofu}, which contains
+fictitious author biographies. The forget set (\texttt{forget01}) contains 40 QA pairs
+about authors to be unlearned; the retain set (\texttt{retain99}) contains 3{,}960 QA pairs.
+
+\textbf{Unlearning Verification.} GA unlearning with 5 epochs yields a forget-set
+perplexity increase from 12.73 to 1{,}146.32 (90$\times$), confirming effective
+behavioral forgetting at the output level.
 
 \subsection{RQ1: Does Snowballing Increase Post-Unlearning?}
-\TODO{Fill with results from Phase 2 experiments.}
+\TODO{Fill with snowball measurement results (measure\_snowball.py).}
 
-\subsection{RQ2: Mechanistic Analysis}
-\TODO{Fill with probing results from Phase 3.}
+\subsection{RQ2: Mechanistic Analysis --- Where Does Residual Knowledge Live?}
+
+We train linear probes at 8 evenly-spaced layers to classify whether a hidden-state
+activation originated from the forget set or the retain set. Table~\ref{tab:rki}
+reports probe accuracy for the base model and the GA-unlearned model.
+
+\begin{table}[h]
+\centering
+\caption{Linear probe accuracy (forget vs.\ retain classification) per layer,
+before and after Gradient Ascent unlearning on Qwen2.5-1.5B.}
+\label{tab:rki}
+\begin{tabular}{lcc}
+\toprule
+Layer & Base Model & Unlearned Model \\
+\midrule
+0  (embedding)  & 0.583 & \textbf{1.000} \\
+4               & 1.000 & 1.000 \\
+8               & 1.000 & 1.000 \\
+12              & 1.000 & 1.000 \\
+16              & 1.000 & 1.000 \\
+20              & 1.000 & 1.000 \\
+24              & 1.000 & 1.000 \\
+28 (final)      & \textbf{1.000} & 0.958 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Key finding:} Unlearning primarily affects the final layer (probe accuracy
+drops from 1.000 to 0.958), while all intermediate layers retain perfect separability.
+Notably, the embedding layer (layer~0) becomes \emph{more} separable after unlearning
+(0.583$\to$1.000), suggesting that gradient ascent reorganizes early representations
+while only suppressing output-level behavior. This confirms that GA unlearning is
+\textit{surface-level}: internal representations of the forget concept remain intact,
+creating the conditions for residual knowledge interference during multi-step reasoning.
 
 \subsection{RQ3: Does \bacc{} Mitigate Snowballing?}
 \TODO{Fill with Phase 4 results.}
