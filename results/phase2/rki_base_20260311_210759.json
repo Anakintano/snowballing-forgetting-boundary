@@ -1,0 +1,74 @@
+{
+  "base": {
+    "0": {
+      "probe_accuracy": 0.5833333333333334,
+      "forget_cosine_mean": 0.8346786499023438,
+      "forget_cosine_std": 0.043796580568186055,
+      "retain_cosine_mean": 0.6812770426273346,
+      "cosine_gap": 0.15340160727500918
+    },
+    "4": {
+      "probe_accuracy": 1.0,
+      "forget_cosine_mean": 0.9992920741438865,
+      "forget_cosine_std": 0.00034854668592334225,
+      "retain_cosine_mean": 0.9991677582263947,
+      "cosine_gap": 0.00012431591749184623
+    },
+    "8": {
+      "probe_accuracy": 1.0,
+      "forget_cosine_mean": 0.9988004565238953,
+      "forget_cosine_std": 0.0007735849980013247,
+      "retain_cosine_mean": 0.9986145317554473,
+      "cosine_gap": 0.00018592476844792039
+    },
+    "12": {
+      "probe_accuracy": 1.0,
+      "forget_cosine_mean": 0.9983244642615319,
+      "forget_cosine_std": 0.0009636790696198693,
+      "retain_cosine_mean": 0.9980474039912224,
+      "cosine_gap": 0.00027706027030949265
+    },
+    "16": {
+      "probe_accuracy": 1.0,
+      "forget_cosine_mean": 0.997971861064434,
+      "forget_cosine_std": 0.0013183198013340814,
+      "retain_cosine_mean": 0.9977156966924667,
+      "cosine_gap": 0.00025616437196729347
+    },
+    "20": {
+      "probe_accuracy": 1.0,
+      "forget_cosine_mean": 0.9965248689055443,
+      "forget_cosine_std": 0.0021640463621590777,
+      "retain_cosine_mean": 0.9961427882313728,
+      "cosine_gap": 0.00038208067417144775
+    },
+    "24": {
+      "probe_accuracy": 1.0,
+      "forget_cosine_mean": 0.9899201631546021,
+      "forget_cosine_std": 0.005334281905745348,
+      "retain_cosine_mean": 0.9858590424060821,
+      "cosine_gap": 0.004061120748519942
+    },
+    "28": {
+      "probe_accuracy": 1.0,
+      "forget_cosine_mean": 0.980640321969986,
+      "forget_cosine_std": 0.012240038380067316,
+      "retain_cosine_mean": 0.9687840491533279,
+      "cosine_gap": 0.01185627281665802
+    }
+  },
+  "layers": [
+    0,
+    4,
+    8,
+    12,
+    16,
+    20,
+    24,
+    28
+  ],
+  "timestamp": "20260311_210759",
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "mode": "base",
+  "dry_run": false
+}
