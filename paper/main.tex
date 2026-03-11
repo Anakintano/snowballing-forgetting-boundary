@@ -1,0 +1,193 @@
+% paper/main.tex
+% AAAI 2027 Submission
+% Target: Main Track — Machine Learning
+
+\documentclass[letterpaper]{article}
+\usepackage{times}
+\usepackage{helvet}
+\usepackage{courier}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage[margin=1in]{geometry}
+
+% Theorem environments
+\newtheorem{definition}{Definition}
+\newtheorem{hypothesis}{Hypothesis}
+
+% Custom commands
+\newcommand{\rki}{\textsc{RKI}}
+\newcommand{\bacc}{\textsc{BACC}}
+\newcommand{\forget}{\mathcal{D}_f}
+\newcommand{\retain}{\mathcal{D}_r}
+\newcommand{\TODO}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
+
+\title{Snowballing at the Forgetting Boundary: \\
+How Partial Unlearning Destabilizes Chain-of-Thought Reasoning}
+
+\author{
+  Anonymous Author(s) \\
+  Affiliation \\
+  \texttt{email@domain.com}
+}
+
+\begin{document}
+\maketitle
+
+%% -----------------------------------------------
+\begin{abstract}
+\TODO{Write after experiments confirm hypothesis.}
+Machine unlearning has emerged as a critical technique for removing knowledge from
+large language models (LLMs). However, we identify an overlooked failure mode:
+partial unlearning destabilizes chain-of-thought (CoT) reasoning. We show that
+residual knowledge traces near the forget-set boundary act as corrupted nodes
+in the reasoning chain, causing errors to compound---a phenomenon we term
+\textit{forgetting-boundary snowballing}. We formalize this via the
+Residual Knowledge Interference (\rki) score, a mutual-information measure
+of forget-concept residue as a function of CoT depth. Mechanistic analysis
+reveals that \TODO{N} attention heads in layers \TODO{L1--L2} become unstable
+post-unlearning and propagate errors downstream. To mitigate this, we propose
+\bacc{} (Boundary-Aware CoT Checkpointing), a lightweight inference-time
+intervention requiring no retraining. Experiments across three models and three
+unlearning methods demonstrate \TODO{X\%} reduction in snowballing with
+negligible utility loss.
+\end{abstract}
+
+%% -----------------------------------------------
+\section{Introduction}
+\label{sec:intro}
+
+Machine unlearning~\cite{cao2015towards} has gained significant attention as a
+means of selectively erasing knowledge from trained models in response to privacy
+regulations and safety concerns. Recent work has established effective methods
+for gradient-based forgetting~\cite{chundawat2023bad,zhang2024npo}, yet a critical
+downstream effect has gone unstudied: \textit{what happens to multi-step reasoning
+after unlearning?}
+
+\TODO{Fill: paragraph on CoT snowballing setup}
+
+\TODO{Fill: paragraph stating hypothesis}
+
+We make the following contributions:
+\begin{enumerate}
+    \item We identify and characterize \textit{forgetting-boundary snowballing},
+    a novel failure mode where partial unlearning amplifies CoT errors.
+    \item We introduce the \rki{} score, an information-theoretic metric
+    quantifying residual knowledge interference in reasoning chains.
+    \item We provide mechanistic evidence of which layers and attention heads
+    drive this instability via probing analysis.
+    \item We propose \bacc{}, an inference-time mitigation requiring no
+    additional model training.
+\end{enumerate}
+
+%% -----------------------------------------------
+\section{Related Work}
+\label{sec:related}
+
+\subsection{Machine Unlearning}
+Early work on machine unlearning focused on classification
+models~\cite{thudi2022unrolling}. Chundawat et al.~\cite{chundawat2023bad}
+proposed the Bad Teacher method, using an incompetent teacher to induce
+targeted forgetting. \TODO{Add NPO, TOFU, recent surveys.}
+
+\subsection{Chain-of-Thought Reasoning}
+Wei et al.~\cite{wei2022chain} introduced CoT prompting as a method for
+eliciting step-by-step reasoning. Snowballing in CoT---where errors compound
+across reasoning steps---was formalized by Gan et al.~\cite{gan2025snowball}
+using an information-theoretic framework. \TODO{Add faithfulness, mechanistic interp refs.}
+
+\subsection{Mechanistic Interpretability}
+\TODO{Add Elhage circuits, probing classifier refs.}
+
+%% -----------------------------------------------
+\section{Problem Formulation}
+\label{sec:formulation}
+
+\subsection{Setup}
+Let $\mathcal{M}$ be a language model trained on dataset $\mathcal{D} = \forget \cup \retain$,
+where $\forget$ is the forget set and $\retain$ is the retain set.
+After applying an unlearning algorithm $\mathcal{U}$, we obtain $\mathcal{M}_u = \mathcal{U}(\mathcal{M}, \forget)$.
+
+\subsection{CoT Reasoning Chains}
+A reasoning chain of depth $D$ is a sequence of steps
+$\mathbf{c} = (c_1, c_2, \ldots, c_D)$ where each step $c_d$ is generated
+autoregressively conditioned on prior steps. Let $h_l^{(d)}$ denote the
+hidden state at layer $l$ during generation of step $c_d$.
+
+\subsection{Residual Knowledge Interference (\rki) Score}
+\begin{definition}[\rki{} Score]
+The Residual Knowledge Interference score at layer $l$ and chain depth $d$ is:
+\begin{equation}
+    \rki(l, d) = I\!\left(h_l^{(d)};\, \mathcal{C}_{\forget}\right)
+    \label{eq:rki}
+\end{equation}
+where $\mathcal{C}_{\forget}$ is the forget-concept representation
+(centroid of $\forget$ embeddings) and $I(\cdot;\cdot)$ denotes mutual information.
+\end{definition}
+
+\begin{hypothesis}
+When $\rki(l, d) > \tau$ for some threshold $\tau$ and chain depth $d > k$,
+downstream CoT steps exhibit compounding error accumulation.
+\end{hypothesis}
+
+\TODO{Add formal error cascade definition.}
+
+%% -----------------------------------------------
+\section{Experiments}
+\label{sec:experiments}
+
+\subsection{Setup}
+\textbf{Models.} We evaluate on three models: \TODO{list after running experiments}.
+
+\textbf{Unlearning Methods.} We compare Gradient Ascent (GA)~\cite{thudi2022unrolling},
+Bad Teacher~\cite{chundawat2023bad}, and NPO~\cite{zhang2024npo}.
+
+\textbf{Dataset.} We use the TOFU benchmark~\cite{maini2024tofu}, \TODO{describe forget/retain split}.
+
+\subsection{RQ1: Does Snowballing Increase Post-Unlearning?}
+\TODO{Fill with results from Phase 2 experiments.}
+
+\subsection{RQ2: Mechanistic Analysis}
+\TODO{Fill with probing results from Phase 3.}
+
+\subsection{RQ3: Does \bacc{} Mitigate Snowballing?}
+\TODO{Fill with Phase 4 results.}
+
+%% -----------------------------------------------
+\section{The \bacc{} Method}
+\label{sec:bacc}
+
+\TODO{Fill after Phase 4 implementation.}
+
+Algorithm sketch:
+\begin{algorithm}
+\caption{Boundary-Aware CoT Checkpointing (\bacc{})}
+\begin{algorithmic}[1]
+\Require Unlearned model $\mathcal{M}_u$, probe $P$, steering vector $\mathbf{v}$, threshold $\tau$
+\For{each CoT step $d = 1, \ldots, D$}
+    \State Generate hidden state $h^{(d)}$ at monitored layer $l^*$
+    \If{$P(h^{(d)}) > \tau$}  \Comment{Boundary detected}
+        \State Apply steering: $h^{(d)} \leftarrow h^{(d)} + \alpha \mathbf{v}$
+    \EndIf
+    \State Generate token $c_d$ from modified $h^{(d)}$
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+%% -----------------------------------------------
+\section{Conclusion}
+\label{sec:conclusion}
+
+\TODO{Fill last.}
+
+%% -----------------------------------------------
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,37 @@
+# Models & checkpoints (too large for GitHub)
+models/checkpoints/*.pt
+models/checkpoints/*.bin
+models/checkpoints/*.safetensors
+*.pkl
+
+# Data (use HuggingFace cache instead)
+data/tofu/
+*.arrow
+*.parquet
+
+# Results (large files)
+results/**/*.npy
+results/**/*.pt
+
+# Python
+__pycache__/
+*.pyc
+.env
+venv/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Figures — commit only final ones
+paper/figures/tmp_*
+
+# LaTeX build artifacts
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.log
+paper/*.out
+paper/*.synctex.gz
+paper/*.fls
+paper/*.fdb_latexmk
