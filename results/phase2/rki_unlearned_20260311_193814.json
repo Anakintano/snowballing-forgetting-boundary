@@ -1,0 +1,42 @@
+{
+  "unlearned": {
+    "0": {
+      "probe_accuracy": 0.4,
+      "forget_cosine_mean": 0.9143667101860047,
+      "forget_cosine_std": 0.0358416184673912,
+      "retain_cosine_mean": 0.5482780188322067,
+      "cosine_gap": 0.36608869135379796
+    },
+    "9": {
+      "probe_accuracy": 1.0,
+      "forget_cosine_mean": 0.9992492318153381,
+      "forget_cosine_std": 0.000851184128692373,
+      "retain_cosine_mean": 0.996902197599411,
+      "cosine_gap": 0.0023470342159270796
+    },
+    "18": {
+      "probe_accuracy": 0.8,
+      "forget_cosine_mean": 0.9986679196357727,
+      "forget_cosine_std": 0.0014099263433188759,
+      "retain_cosine_mean": 0.9947737693786621,
+      "cosine_gap": 0.0038941502571105957
+    },
+    "28": {
+      "probe_accuracy": 0.5,
+      "forget_cosine_mean": 0.9650839805603028,
+      "forget_cosine_std": 0.008535820796755886,
+      "retain_cosine_mean": 0.8745652318000794,
+      "cosine_gap": 0.09051874876022337
+    }
+  },
+  "layers": [
+    0,
+    9,
+    18,
+    28
+  ],
+  "timestamp": "20260311_193814",
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "mode": "unlearned",
+  "dry_run": true
+}
