@@ -1,0 +1,12 @@
+{
+  "method": "gradient_ascent",
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "epochs": 5,
+  "lr": 0.0001,
+  "forget_samples": 40,
+  "ppl_before": 12.725215911865234,
+  "ppl_after": 1146.32421875,
+  "ppl_ratio": 90.08288949196888,
+  "timestamp": "20260311_185919",
+  "dry_run": false
+}

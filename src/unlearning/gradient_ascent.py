@@ -55,8 +55,7 @@ def load_model_and_tokenizer(model_name):
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
         quantization_config=bnb_config,
-        device_map="auto",
-        torch_dtype=torch.float16,
+        device_map={"": 0},  # HARDWARE NOTE: device_map="auto" segfaults on Windows; explicit map works
     )
 
     # RESEARCH NOTE: LoRA on q_proj and v_proj is standard for unlearning —
@@ -173,7 +172,7 @@ def train_ga(model, forget_loader, optimizer, device, epochs, grad_accum_steps=4
 
 def main():
     parser = argparse.ArgumentParser(description="Gradient Ascent Unlearning")
-    parser.add_argument("--model_name", type=str, default="meta-llama/Llama-3.2-1B-Instruct")
+    parser.add_argument("--model_name", type=str, default="Qwen/Qwen2.5-1.5B-Instruct")
     parser.add_argument("--epochs", type=int, default=3)
     parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument("--output_dir", type=str, default="models/checkpoints/ga")

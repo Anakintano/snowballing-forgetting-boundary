@@ -50,7 +50,7 @@ def load_base_model(model_name):
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
         quantization_config=bnb_config,
-        device_map="auto",
+        device_map={"": 0},  # HARDWARE NOTE: device_map="auto" segfaults on Windows; explicit map works
         torch_dtype=torch.float16,
     )
     return model, tokenizer
@@ -209,7 +209,7 @@ def train_bad_teacher(model, forget_loader, retain_loader, teacher_logits,
 
 def main():
     parser = argparse.ArgumentParser(description="Bad Teacher Unlearning")
-    parser.add_argument("--model_name", type=str, default="meta-llama/Llama-3.2-1B-Instruct")
+    parser.add_argument("--model_name", type=str, default="Qwen/Qwen2.5-1.5B-Instruct")
     parser.add_argument("--epochs", type=int, default=3)
     parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument("--alpha", type=float, default=0.5, help="Weight for forget KL loss")
